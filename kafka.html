@@ -1,0 +1,586 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kafka Revision Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky section rail on the left, one reading column; every interactive block is a "lab" panel. */
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --sunk:#F5F7F9; --ink:#141B24; --muted:#586472; --line:#D4DAE1;
+  --accent:#2E49C8; --accent-soft:#E2E7FB; --accent-ink:#FFFFFF;
+  --good:#1D7748; --good-soft:#DCF1E5; --bad:#B0302A; --bad-soft:#F8E1DF; --warn:#9A6209; --warn-soft:#F7EBD3;
+  --p0:#2E49C8; --p1:#C2410C; --p2:#0F766E; --p3:#7E22CE; --p4:#B45309; --p5:#BE185D; --p6:#4D7C0F; --p7:#0369A1;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F141A; --surface:#161D25; --sunk:#121820; --ink:#E5EAF0; --muted:#97A3B1; --line:#2A3440;
+  --accent:#8FA3FF; --accent-soft:#1E2748; --accent-ink:#0F141A;
+  --good:#5FC891; --good-soft:#15301F; --bad:#F2827A; --bad-soft:#3A1A18; --warn:#E5AC4F; --warn-soft:#352812;
+  --p0:#8FA3FF; --p1:#FB8F5A; --p2:#4FD1C0; --p3:#C49BFA; --p4:#F2B657; --p5:#F27AB3; --p6:#A3D65C; --p7:#5CC2F2;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0F141A; --surface:#161D25; --sunk:#121820; --ink:#E5EAF0; --muted:#97A3B1; --line:#2A3440;
+  --accent:#8FA3FF; --accent-soft:#1E2748; --accent-ink:#0F141A;
+  --good:#5FC891; --good-soft:#15301F; --bad:#F2827A; --bad-soft:#3A1A18; --warn:#E5AC4F; --warn-soft:#352812;
+  --p0:#8FA3FF; --p1:#FB8F5A; --p2:#4FD1C0; --p3:#C49BFA; --p4:#F2B657; --p5:#F27AB3; --p6:#A3D65C; --p7:#5CC2F2;
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;margin:0}
+.shell{display:grid;grid-template-columns:210px minmax(0,1fr);gap:48px;max-width:1080px;margin:0 auto;padding-inline:24px;padding-block:40px 80px}
+nav.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;display:flex;flex-direction:column;gap:2px}
+nav.rail .brand{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+nav.rail a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;display:flex;gap:10px;align-items:baseline}
+nav.rail a span{font-family:var(--f-mono);font-size:11px;color:var(--muted);opacity:.7;min-width:22px}
+nav.rail a:hover{color:var(--ink);background:var(--surface)}
+nav.rail a.on{color:var(--ink);background:var(--surface);box-shadow:inset 2px 0 0 var(--accent)}
+main{min-width:0;max-width:760px}
+header.hero{padding-bottom:28px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--f-display);font-weight:750;font-size:clamp(2.1rem,5vw,3.1rem);line-height:1.05;margin:10px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--f-display);font-weight:750;font-size:1.65rem;line-height:1.15;margin:0 0 6px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:1.12rem;margin:22px 0 6px}
+p{margin:0 0 12px;max-width:66ch}
+.lede{font-size:1.08rem;color:var(--muted)}
+.hero-log{display:flex;gap:4px;margin-top:22px;flex-wrap:wrap;font-family:var(--f-mono);font-size:12px}
+.hero-log .cell{border:1px solid var(--line);background:var(--surface);padding:6px 9px;border-radius:4px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hero-log .cell.new{border-color:var(--accent);color:var(--accent);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{background:var(--accent-soft)}}
+section{padding-block:44px 8px;scroll-margin-top:20px}
+.num{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
+ul.tight{margin:0 0 12px;padding-left:20px;max-width:66ch}
+ul.tight li{margin-bottom:5px}
+code,.mono{font-family:var(--f-mono);font-size:.88em}
+code{background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+pre{font-family:var(--f-mono);font-size:13px;line-height:1.55;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:0 0 14px}
+.key{background:var(--accent-soft);border-radius:8px;padding:14px 16px;margin:14px 0;max-width:66ch}
+.key strong{color:var(--accent)}
+
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0 16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.tile h4{margin:0 0 4px;font-size:15px}
+.tile p{font-size:14px;color:var(--muted);margin:0}
+.tile .tag{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--bad)}
+
+/* labs */
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;margin:18px 0}
+.lab-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.lab-head .t{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lab-head .hint{font-size:13px;color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.controls label{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+input[type=text],select{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);color:var(--ink);min-width:0}
+input[type=text]{width:150px;font-family:var(--f-mono)}
+input[type=range]{accent-color:var(--accent);width:130px}
+button{font:inherit;font-size:14px;font-weight:500;padding:7px 13px;border-radius:6px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.ghost{background:transparent}
+button.sel{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.out{font-size:14px;color:var(--muted);min-height:1.4em}
+
+.lanes{display:flex;flex-direction:column;gap:6px;overflow-x:auto;padding-bottom:4px}
+.lane{display:flex;align-items:center;gap:6px;min-height:34px}
+.lane .lbl{font-family:var(--f-mono);font-size:12px;width:34px;flex:none;font-weight:500}
+.lane .recs{display:flex;gap:4px}
+.rec{font-family:var(--f-mono);font-size:11px;padding:4px 7px;border-radius:4px;border:1px solid currentColor;white-space:nowrap;background:var(--surface)}
+.rec b{font-weight:500;opacity:.65;margin-right:4px}
+.rec.fresh{animation:drop .5s ease-out}
+@keyframes drop{from{transform:translateY(-6px);opacity:0}}
+
+.brokers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.broker{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--sunk);min-width:0}
+.broker.dead{opacity:.45;border-style:dashed}
+.broker .bh{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;font-family:var(--f-mono);font-size:12px}
+.broker .bh button{font-size:12px;padding:3px 8px}
+.rep{font-family:var(--f-mono);font-size:12px;padding:3px 7px;border-radius:4px;margin:3px 3px 0 0;display:inline-block;border:1px solid currentColor}
+.rep.leader{font-weight:500;background:var(--surface)}
+.rep.follower{opacity:.6;border-style:dotted}
+
+.group{border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:10px;background:var(--sunk)}
+.group .gh{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-bottom:8px}
+.consumers{display:flex;flex-wrap:wrap;gap:8px}
+.consumer{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 10px;min-width:96px}
+.consumer .cn{font-family:var(--f-mono);font-size:12px;margin-bottom:5px}
+.consumer.idle{opacity:.55;border-style:dashed}
+.consumer .chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-family:var(--f-mono);font-size:11px;padding:2px 6px;border-radius:4px;border:1px solid currentColor}
+.state{display:inline-block;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:99px}
+.state.good{background:var(--good-soft);color:var(--good)}
+.state.bad{background:var(--bad-soft);color:var(--bad)}
+.state.warn{background:var(--warn-soft);color:var(--warn)}
+
+.timeline{list-style:none;margin:0;padding:0;border-left:2px solid var(--line);margin-left:6px}
+.timeline li{position:relative;padding:4px 0 8px 18px;font-size:14px}
+.timeline li::before{content:"";position:absolute;left:-6px;top:11px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--line)}
+.timeline li.ok::before{border-color:var(--good);background:var(--good)}
+.timeline li.crash::before{border-color:var(--bad);background:var(--bad)}
+.timeline li.dup::before{border-color:var(--warn);background:var(--warn)}
+.timeline li .mono{color:var(--muted)}
+.verdict{margin-top:10px;padding:10px 12px;border-radius:6px;font-size:14px}
+.verdict.good{background:var(--good-soft)} .verdict.bad{background:var(--bad-soft)} .verdict.warn{background:var(--warn-soft)}
+
+.stack{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr);gap:10px;align-items:stretch;margin:14px 0}
+.stack .col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.stack .col .cap{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stack .item{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:13px}
+.stack .core{background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:12px;display:flex;flex-direction:column;justify-content:center;gap:6px;text-align:center}
+.stack .core strong{font-family:var(--f-display);font-size:1.15rem}
+.stack .core .mono{font-size:12px;color:var(--muted)}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tablewrap{overflow-x:auto;margin:10px 0 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+
+.quizbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:14px 0}
+.score{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card .sc{font-size:14.5px;flex:1}
+.card .acts{display:flex;gap:8px}
+.card .acts button{flex:1;font-size:13px}
+.card .ans{font-size:13.5px;border-top:1px solid var(--line);padding-top:10px}
+.card.right{border-color:var(--good)} .card.wrong{border-color:var(--bad)}
+.card .ans .mono{font-size:12px}
+
+.checklist{counter-reset:q;list-style:none;padding:0;margin:10px 0}
+.checklist li{counter-increment:q;display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);max-width:66ch}
+.checklist li::before{content:counter(q);font-family:var(--f-mono);font-size:12px;color:var(--accent);min-width:16px;padding-top:3px}
+
+footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:0;padding-inline:16px;padding-block:0 60px}
+  nav.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;flex-direction:row;overflow-x:auto;background:var(--bg);padding-block:10px;margin-inline:-16px;padding-inline:16px;border-bottom:1px solid var(--line)}
+  nav.rail .brand{display:none}
+  nav.rail a{white-space:nowrap}
+  header.hero{padding-top:24px}
+  .stack{grid-template-columns:minmax(0,1fr)}
+  .brokers{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Sections">
+    <div class="brand">Kafka · revision</div>
+    <a href="#origin"><span>01</span>Why it exists</a>
+    <a href="#model"><span>02</span>The log model</a>
+    <a href="#partitions"><span>03</span>Partitions & replicas</a>
+    <a href="#groups"><span>04</span>Consumer groups</a>
+    <a href="#records"><span>05</span>A real pipeline</a>
+    <a href="#delivery"><span>06</span>Delivery semantics</a>
+    <a href="#stack"><span>07</span>Where it sits</a>
+    <a href="#fit"><span>08</span>Kafka or not?</a>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">Revision notes · interactive</div>
+      <h1>Kafka is a pipe with memory</h1>
+      <p class="lede">A distributed, partitioned, replicated append-only log. Producers append events, consumers read at their own pace and keep their own bookmark. Work through each section, poke the labs, then test yourself at the end.</p>
+      <div class="hero-log" aria-hidden="true">
+        <div class="cell">0 RideRequested</div><div class="cell">1 DriverAssigned</div><div class="cell">2 RideStarted</div><div class="cell">3 RideCompleted</div><div class="cell new">4 ← append</div>
+      </div>
+    </header>
+
+    <section id="origin">
+      <div class="num">01</div>
+      <h2>Why it exists</h2>
+      <p>LinkedIn, around 2010: dozens of systems produce data (activity, logs, metrics, DB changes) and dozens need it (search, recommendations, Hadoop, monitoring, feed). Wiring each producer to each consumer gives <strong>N × M</strong> integrations. A shared log in the middle turns that into <strong>N + M</strong>.</p>
+      <h3>What existed before</h3>
+      <div class="cols">
+        <div class="tile"><span class="tag">Gap: coupling</span><h4>Point-to-point</h4><p>HTTP calls, DB polling, nightly CSV/ETL. Tightly coupled, stale, each link custom.</p></div>
+        <div class="tile"><span class="tag">Gap: scale, replay</span><h4>Message queues</h4><p>ActiveMQ, RabbitMQ, JMS. Delete on consume, per-message ack state on the broker, weak fan-out, slow when backlogged.</p></div>
+        <div class="tile"><span class="tag">Gap: real time</span><h4>Log aggregators</h4><p>Scribe, Flume. High throughput, but batch shipping into HDFS rather than serving live consumers.</p></div>
+      </div>
+      <p>Kafka combined aggregator throughput, queue-style decoupling, and replay. Built at LinkedIn by Jay Kreps, Neha Narkhede and Jun Rao, open-sourced in 2011.</p>
+      <h3>Problems it solves</h3>
+      <ul class="tight">
+        <li><strong>Decoupling</strong>: producers don't know who consumes.</li>
+        <li><strong>Buffering</strong>: spikes and slow consumers are absorbed by the log.</li>
+        <li><strong>Fan-out</strong>: one stream feeds many systems independently.</li>
+        <li><strong>Replay</strong>: rewind offsets to reprocess or bootstrap a new service.</li>
+        <li><strong>Per-key ordering</strong>: same key → same partition → ordered.</li>
+        <li><strong>Durability and scale</strong>: replicated partitions spread across brokers.</li>
+      </ul>
+    </section>
+
+    <section id="model">
+      <div class="num">02</div>
+      <h2>The log model</h2>
+      <ul class="tight">
+        <li><strong>Topic</strong>: a named category of events (<code>gps-pings</code>, <code>orders</code>). Like a table.</li>
+        <li><strong>Partition</strong>: an ordered, append-only, immutable log. Each record gets an increasing <strong>offset</strong>, counted per partition.</li>
+        <li><strong>Retention by time or size</strong>, not by consumption. Reading doesn't delete.</li>
+        <li><strong>Consumers track their own offset.</strong> The broker keeps no per-message delivery state, so replay is just "seek back".</li>
+      </ul>
+      <h3>Why disk-based and still fast</h3>
+      <ul class="tight">
+        <li>Sequential reads and writes only.</li>
+        <li>Leans on the OS page cache rather than its own cache.</li>
+        <li>Batching and compression.</li>
+        <li>Zero-copy <code>sendfile</code> from disk to socket.</li>
+      </ul>
+      <div class="key"><strong>Raft link:</strong> Kafka once needed ZooKeeper for metadata and controller election. It replaced that with <strong>KRaft</strong>, a Raft-based metadata quorum, and Kafka 4.0 removed ZooKeeper entirely.</div>
+      <h3>What a record contains</h3>
+      <ul class="tight">
+        <li><strong>key</strong> (optional): usually an entity ID; decides the partition.</li>
+        <li><strong>value</strong>: payload bytes (JSON, Avro, Protobuf). Kafka never parses it.</li>
+        <li><strong>timestamp</strong> and optional <strong>headers</strong> (trace ID, schema version).</li>
+      </ul>
+      <p>Records are <strong>events</strong>: past-tense facts like <code>OrderPlaced</code>, not commands (<code>SendEmail</code>) and not mutable state (<code>balance=500</code>).</p>
+    </section>
+
+    <section id="partitions">
+      <div class="num">03</div>
+      <h2>Partitions & replicas</h2>
+      <p><strong>A partition is a shard, not a copy.</strong> Each record lands in exactly one partition; together they hold the whole topic. <strong>Replication</strong> is a second layer: each partition is copied to other brokers.</p>
+      <div class="key">Partitioning gives <strong>scale</strong> (data divided). Replication gives <strong>durability</strong> (each piece copied). Topic → many partitions; a partition belongs to exactly one topic.</div>
+
+      <div class="lab">
+        <div class="lab-head"><span class="t">Lab · keyed producer</span><span class="hint">partition = hash(key) % partitions</span></div>
+        <div class="controls">
+          <label for="pkey">Key <input type="text" id="pkey" value="driver_881" autocomplete="off"></label>
+          <button class="primary" id="produce">Produce record</button>
+          <button id="burst">Produce 5 random</button>
+          <label for="pcount">Partitions <select id="pcount"><option>2</option><option selected>3</option><option>4</option><option>6</option><option>8</option></select></label>
+          <button class="ghost" id="pclear">Clear</button>
+        </div>
+        <div class="out" id="pout">Produce the same key twice and watch it land in the same partition.</div>
+        <div class="lanes" id="lanes"></div>
+      </div>
+
+      <div class="lab">
+        <div class="lab-head"><span class="t">Lab · replication (RF = 3)</span><span class="hint">Kill a broker. In-sync followers get promoted.</span></div>
+        <div class="brokers" id="brokers"></div>
+        <div class="out" id="rout" style="margin-top:10px">Bold = leader (takes writes). Dotted = follower (copies the leader).</div>
+      </div>
+    </section>
+
+    <section id="groups">
+      <div class="num">04</div>
+      <h2>Consumer groups</h2>
+      <p>Many <strong>groups</strong> can read the same partition, each with its own offset. That's fan-out. Inside <strong>one group</strong>, each partition goes to exactly one consumer.</p>
+      <h3>Why one consumer per partition per group</h3>
+      <ul class="tight">
+        <li><strong>Progress is one number.</strong> The committed offset means "everything before this is done". That only works if one reader handles records in sequence. Two readers would need a per-message checklist, which is the bookkeeping Kafka removed to be fast.</li>
+        <li><strong>Ordering.</strong> <code>RideStarted</code> and <code>RideCompleted</code> for one ride sit in one partition. Two readers could finish them out of order.</li>
+      </ul>
+      <p>Analogy: a kitchen order roll is a partition. Each team (group) has one bookmark. Two cooks on one roll with one bookmark either cook the same order twice or need a claim list. To scale, add rolls (partitions), not cooks per roll.</p>
+
+      <div class="lab">
+        <div class="lab-head"><span class="t">Lab · assignment</span><span class="hint">Partitions are the parallelism ceiling</span></div>
+        <div class="controls">
+          <label for="gp">Partitions <input type="range" id="gp" min="1" max="12" value="6"> <span class="mono" id="gpv">6</span></label>
+          <label for="gc">Consumers in group <input type="range" id="gc" min="1" max="12" value="3"> <span class="mono" id="gcv">3</span></label>
+          <label for="g2"><input type="checkbox" id="g2" checked> Show a second group</label>
+        </div>
+        <div id="groupsOut"></div>
+        <div class="out" id="gout" style="margin-top:10px"></div>
+      </div>
+      <p><strong>Share groups</strong> (KIP-932, "Queues for Kafka") are a newer opt-in for queue-style work: many workers per partition, per-message acks, no ordering. The classic group model is still the default.</p>
+    </section>
+
+    <section id="records">
+      <div class="num">05</div>
+      <h2>A real pipeline: ride-hailing</h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Topic</th><th>Key</th><th>Partitions</th><th>Consumer groups</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">driver-locations</td><td class="mono">driver_id</td><td>64</td><td>matching, eta, surge-pricing, lake-sink</td></tr>
+          <tr><td class="mono">ride-events</td><td class="mono">ride_id</td><td>24</td><td>notifications, billing, fraud, analytics</td></tr>
+          <tr><td class="mono">payments</td><td class="mono">ride_id</td><td>12</td><td>ledger, receipts, analytics</td></tr>
+        </tbody>
+      </table></div>
+      <h3>A ping, appended every ~4 seconds</h3>
+<pre>key:   "driver_881"
+value: {"driver_id":"driver_881","lat":12.9716,"lng":77.5946,
+        "speed_kmph":23,"status":"available","ts":"2026-10-06T09:41:03Z"}</pre>
+      <h3>One ride's lifecycle (same key, same partition, in order)</h3>
+<pre>offset 9001  key: ride_5521  {"type":"RideRequested","rider":"u_77", ...}
+offset 9002  key: ride_5521  {"type":"DriverAssigned","driver":"driver_881", ...}
+offset 9003  key: ride_5521  {"type":"RideStarted", ...}
+offset 9004  key: ride_5521  {"type":"RideCompleted","distance_km":8.4,"fare":312, ...}</pre>
+      <p>Billing consumes <code>RideCompleted</code>, charges the card, then produces <code>PaymentCaptured</code> to <code>payments</code>. Services reacting to events and emitting new ones is what "event-driven architecture" means.</p>
+<pre>consumer = KafkaConsumer("ride-events", group_id="notifications")
+for record in consumer:              # polls batches from assigned partitions
+    event = json.loads(record.value)
+    if event["type"] == "DriverAssigned":
+        send_push(event)
+    # commit offset: "done up to here"</pre>
+    </section>
+
+    <section id="delivery">
+      <div class="num">06</div>
+      <h2>Delivery semantics</h2>
+      <p>A side effect (a push, a charge) and an offset commit live in two different systems. No ordering of the two is crash-safe by itself.</p>
+
+      <div class="lab">
+        <div class="lab-head"><span class="t">Lab · crash the consumer</span><span class="hint">Record at offset 9002: DriverAssigned</span></div>
+        <div class="controls" role="group" aria-label="Order of steps">
+          <button id="ordA" class="sel">Process → commit</button>
+          <button id="ordB">Commit → process</button>
+        </div>
+        <div class="controls">
+          <label for="crash"><input type="checkbox" id="crash" checked> Crash between the two steps</label>
+          <label for="dedupe"><input type="checkbox" id="dedupe"> Idempotent consumer (dedupe on event_id)</label>
+        </div>
+        <ol class="timeline" id="tl"></ol>
+        <div class="verdict" id="verdict"></div>
+      </div>
+
+      <div class="tablewrap"><table>
+        <thead><tr><th>Guarantee</th><th>How you get it</th><th>Risk</th></tr></thead>
+        <tbody>
+          <tr><td><span class="state warn">at-most-once</span></td><td>Commit, then process</td><td>Messages lost on crash</td></tr>
+          <tr><td><span class="state good">at-least-once</span></td><td>Process, then commit (default)</td><td>Duplicates on crash</td></tr>
+          <tr><td><span class="state good">effectively once</span></td><td>At-least-once + idempotent processing</td><td>Needs a stable ID and care with the gap</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Making duplicates harmless</h3>
+      <ul class="tight">
+        <li><strong>Dedupe on a stable ID</strong>: <code>event_id</code> or <code>(topic, partition, offset)</code> in a table with a unique constraint.</li>
+        <li><strong>Same transaction</strong>: write the result and the offset to your own DB atomically; on restart, seek to the stored offset.</li>
+        <li><strong>Idempotency keys</strong> for external APIs (payment gateways like Stripe and Razorpay support them).</li>
+      </ul>
+      <h3>Kafka's exactly-once, and its boundary</h3>
+      <ul class="tight">
+        <li><strong>Idempotent producer</strong>: producer ID + per-partition sequence numbers; the broker drops retried duplicates. On by default in modern clients.</li>
+        <li><strong>Transactions</strong>: for consume → process → produce, output records and input offsets commit atomically. Readers use <code>isolation.level=read_committed</code>.</li>
+        <li><strong>Boundary</strong>: only holds when input and output are both Kafka. Any external side effect falls back to idempotency.</li>
+      </ul>
+    </section>
+
+    <section id="stack">
+      <div class="num">07</div>
+      <h2>Where it sits</h2>
+      <p>Middleware: the data backbone between systems that produce events and systems that act on or store them.</p>
+      <div class="stack">
+        <div class="col"><span class="cap">Sources</span>
+          <div class="item">Microservices</div><div class="item">DB changes (CDC via Debezium)</div><div class="item">IoT / mobile pings</div><div class="item">Logs & metrics</div></div>
+        <div class="core"><strong>Kafka</strong><span class="mono">topics → partitions → replicated logs</span><span class="mono">Connect · Streams</span></div>
+        <div class="col"><span class="cap">Sinks / processors</span>
+          <div class="item">Flink · Kafka Streams · Spark</div><div class="item">Lake / warehouse (S3, ADLS)</div><div class="item">Search (Elasticsearch)</div><div class="item">Caches, other services, alerting</div></div>
+      </div>
+      <h3>Who uses it</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Company</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>LinkedIn</td><td>Origin. Activity tracking, metrics, feed pipelines at trillions of messages a day.</td></tr>
+          <tr><td>Netflix</td><td>Viewing activity, logging, real-time analytics.</td></tr>
+          <tr><td>Uber</td><td>Trip events, driver location streams, surge inputs, data lake ingestion.</td></tr>
+          <tr><td>Airbnb, Pinterest, Spotify, X</td><td>Activity streams, logging, analytics pipelines.</td></tr>
+          <tr><td>Banks (Goldman Sachs, Capital One)</td><td>Transaction streams, fraud detection.</td></tr>
+          <tr><td>Flipkart, Swiggy, Zomato</td><td>Order and event pipelines.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="fit">
+      <div class="num">08</div>
+      <h2>Kafka or not?</h2>
+      <p>Kafka handles <strong>event streams</strong>, not time-series storage: no queries, order only per partition, timestamps can arrive late, data expires.</p>
+      <h3>The three-question test</h3>
+      <ol class="checklist">
+        <li>Is each message a <strong>fact that happened</strong>, not a job to do or a question to answer?</li>
+        <li>Do <strong>multiple independent systems</strong> care about it, now or later?</li>
+        <li>Is volume high enough, or replay valuable enough, to justify running it?</li>
+      </ol>
+      <p>Three yeses: strong fit. A "no" on the first is the clearest sign it's the wrong tool.</p>
+
+      <div class="quizbar">
+        <span class="score" id="score">0 / 0 answered</span>
+        <div style="display:flex;gap:8px">
+          <button id="qfilter">Show unanswered only</button>
+          <button class="ghost" id="qreset">Reset</button>
+        </div>
+      </div>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <footer>Revision notes from a study session on Kafka: origins, the log model, partitions, consumer groups, delivery semantics, and when not to use it.</footer>
+  </main>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const pc = i => `var(--p${i%8})`;
+
+  /* ---------- partitioner ---------- */
+  let nParts = 3, parts = [], seq = 0, lastKey = null;
+  function hash(s){ let h = 5381; for (const c of s) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return Math.abs(h); }
+  function resetParts(){ parts = Array.from({length:nParts}, () => []); }
+  function produce(key, fresh){
+    const p = hash(key) % nParts;
+    parts[p].push({key, off: parts[p].length, fresh});
+    return p;
+  }
+  function renderLanes(){
+    $('lanes').innerHTML = parts.map((recs, i) =>
+      `<div class="lane"><span class="lbl" style="color:${pc(i)}">P${i}</span><div class="recs">${
+        recs.map(r => `<span class="rec${r.fresh?' fresh':''}" style="color:${pc(i)}"><b>${r.off}</b>${r.key}</span>`).join('')
+      }</div></div>`).join('');
+    parts.forEach(r => r.forEach(x => x.fresh = false));
+  }
+  function seedParts(){
+    resetParts();
+    ['driver_881','driver_102','ride_5521','driver_455','driver_881','ride_5521','driver_102'].forEach(k => produce(k,false));
+    renderLanes();
+  }
+  $('produce').onclick = () => {
+    const k = $('pkey').value.trim(); if (!k) { $('pout').textContent = 'Type a key first, e.g. driver_881.'; return; }
+    const p = produce(k, true); renderLanes();
+    const again = parts[p].filter(r => r.key === k).length;
+    $('pout').innerHTML = `<span class="mono">hash("${k}") % ${nParts} = ${p}</span> → P${p}, offset ${parts[p].length-1}` + (again>1 ? `. That's record #${again} for this key, all in P${p}, in order.` : '.');
+  };
+  $('pkey').addEventListener('keydown', e => { if (e.key === 'Enter') $('produce').click(); });
+  $('burst').onclick = () => {
+    for (let i=0;i<5;i++){ const k = (Math.random()<.6?'driver_':'ride_') + (100 + Math.floor(Math.random()*900)); produce(k,true); }
+    renderLanes(); $('pout').textContent = 'Random keys spread across partitions. Order holds within a partition, not across them.';
+  };
+  $('pcount').onchange = e => {
+    nParts = +e.target.value; const old = parts.flat().map(r => r.key); resetParts(); old.forEach(k => produce(k,false)); renderLanes();
+    $('pout').textContent = `Re-hashed into ${nParts} partitions. Notice keys moved: changing the partition count breaks key-to-partition mapping, which is why you plan counts with headroom.`;
+    renderBrokers();
+  };
+  $('pclear').onclick = () => { resetParts(); renderLanes(); $('pout').textContent = 'Cleared.'; };
+
+  /* ---------- replication ---------- */
+  const dead = new Set();
+  function replicaList(p){ return [p%3, (p+1)%3, (p+2)%3]; }
+  function leaderOf(p){ return replicaList(p).find(b => !dead.has(b)); }
+  function renderBrokers(){
+    const html = [0,1,2].map(b => {
+      const reps = [];
+      for (let p=0;p<nParts;p++){
+        if (!replicaList(p).includes(b)) continue;
+        const isLeader = leaderOf(p) === b && !dead.has(b);
+        reps.push(`<span class="rep ${isLeader?'leader':'follower'}" style="color:${pc(p)}">P${p} ${isLeader?'leader':'follower'}</span>`);
+      }
+      return `<div class="broker${dead.has(b)?' dead':''}"><div class="bh"><span>broker ${b+1}${dead.has(b)?' · down':''}</span><button data-b="${b}">${dead.has(b)?'Restart':'Kill'}</button></div>${reps.join('')}</div>`;
+    }).join('');
+    $('brokers').innerHTML = html;
+    $('brokers').querySelectorAll('button').forEach(btn => btn.onclick = () => {
+      const b = +btn.dataset.b;
+      if (dead.has(b)) { dead.delete(b); $('rout').textContent = `Broker ${b+1} is back. It rejoins as a follower and catches up; leadership is not snatched back automatically in real Kafka until a preferred-leader election runs.`; }
+      else if (dead.size >= 2) { $('rout').textContent = 'Keep at least one broker alive, or every partition goes offline.'; return; }
+      else {
+        const moved = []; for (let p=0;p<nParts;p++) if (leaderOf(p) === b) moved.push(p);
+        dead.add(b);
+        $('rout').textContent = moved.length ? `Broker ${b+1} down. Leadership of ${moved.map(p=>'P'+p).join(', ')} moved to an in-sync follower. No data lost.` : `Broker ${b+1} down. It led nothing, so only follower copies are missing.`;
+      }
+      renderBrokers();
+    });
+  }
+
+  /* ---------- consumer groups ---------- */
+  function renderGroups(){
+    const P = +$('gp').value, C = +$('gc').value; $('gpv').textContent = P; $('gcv').textContent = C;
+    const groupHTML = (name, n, prefix) => {
+      const cons = Array.from({length:n}, () => []);
+      for (let p=0;p<P;p++) cons[p % n].push(p);
+      return `<div class="group"><div class="gh">group: ${name} · ${n} consumer${n>1?'s':''}</div><div class="consumers">${
+        cons.map((ps,i) => `<div class="consumer${ps.length?'':' idle'}"><div class="cn">${prefix}-${i+1}${ps.length?'':' · idle'}</div><div class="chips">${
+          ps.map(p => `<span class="chip" style="color:${pc(p)}">P${p}</span>`).join('')}</div></div>`).join('')
+      }</div></div>`;
+    };
+    let html = groupHTML('notifications', C, 'n');
+    if ($('g2').checked) html += groupHTML('analytics', 2, 'a');
+    $('groupsOut').innerHTML = html;
+    const idle = Math.max(0, C - P);
+    $('gout').innerHTML = idle ? `<span class="state bad">${idle} idle</span> More consumers than partitions. Extra consumers wait as hot standbys.` :
+      (P % C ? `<span class="state warn">uneven</span> Some consumers carry more partitions than others.` : `<span class="state good">balanced</span> Every consumer owns ${P/C} partition${P/C>1?'s':''}.`)
+      + ($('g2').checked ? ' The analytics group reads every partition again with its own offsets; it doesn\'t take work away from notifications.' : '');
+  }
+  ['gp','gc','g2'].forEach(id => $(id).addEventListener('input', renderGroups));
+
+  /* ---------- delivery ---------- */
+  let order = 'A';
+  function renderDelivery(){
+    const crash = $('crash').checked, dd = $('dedupe').checked;
+    $('ordA').classList.toggle('sel', order==='A'); $('ordB').classList.toggle('sel', order==='B');
+    const L = []; let v, cls;
+    L.push(['','poll → record <span class="mono">offset 9002, event_id evt_7f3</span>']);
+    if (order === 'A'){
+      if (dd) L.push(['ok','insert <span class="mono">evt_7f3</span> into processed_events (new)']);
+      L.push(['ok','send push "Your driver is arriving"']);
+      if (crash){
+        L.push(['crash','crash before commit · committed offset still 9002']);
+        L.push(['','restart → resume from 9002 → same record again']);
+        if (dd){ L.push(['ok','insert <span class="mono">evt_7f3</span> fails: already processed → skip push']); L.push(['ok','commit offset 9003']);
+          v = 'Delivered at least once, processed once. Small gap remains if you crash between the insert and the push; for money, put the result and offset in one DB transaction.'; cls='good'; }
+        else { L.push(['dup','send push again']); L.push(['ok','commit offset 9003']);
+          v = 'At-least-once: the rider gets two pushes. Nothing lost, one duplicate.'; cls='warn'; }
+      } else { L.push(['ok','commit offset 9003']); v = 'Happy path: one push, offset advanced.'; cls='good'; }
+    } else {
+      L.push(['ok','commit offset 9003']);
+      if (crash){
+        L.push(['crash','crash before processing']);
+        L.push(['','restart → resume from 9003 → 9002 is skipped']);
+        v = 'At-most-once: the push is never sent.' + (dd ? ' Dedupe can\'t help here; the record is never seen again.' : ''); cls='bad';
+      } else { if (dd) L.push(['ok','insert <span class="mono">evt_7f3</span> (new)']); L.push(['ok','send push']); v = 'Happy path. But one crash in the gap loses the record.'; cls='warn'; }
+    }
+    $('tl').innerHTML = L.map(([c,t]) => `<li class="${c}">${t}</li>`).join('');
+    $('verdict').className = 'verdict ' + cls; $('verdict').textContent = v;
+  }
+  $('ordA').onclick = () => { order='A'; renderDelivery(); };
+  $('ordB').onclick = () => { order='B'; renderDelivery(); };
+  ['crash','dedupe'].forEach(id => $(id).addEventListener('change', renderDelivery));
+
+  /* ---------- quiz ---------- */
+  const Q = [
+    {s:'Clickstream from the website feeds analytics, recommendations and fraud detection.', k:true, why:'Facts that happened, many independent consumers, high volume. Textbook fit.'},
+    {s:'Distribute 2 million URLs to a pool of scraper workers, with retries for failures.', k:false, why:'These are jobs, not events. Variable durations cause head-of-line blocking, and per-job retry is awkward.', alt:'RabbitMQ, SQS, Celery, or Postgres SKIP LOCKED'},
+    {s:'Rider app shows the assigned driver\'s current location on a map.', k:false, why:'"Latest value for one key" needs a lookup. Kafka can only be scanned.', alt:'Redis / DB, kept fresh by a Kafka consumer'},
+    {s:'Dashboard: plot a driver\'s route for the past week.', k:false, why:'That\'s a time-range query over stored data. Kafka has no index and data expires.', alt:'ClickHouse, TimescaleDB, InfluxDB (Kafka can feed them)'},
+    {s:'Stream every row change in Postgres into Elasticsearch and the warehouse.', k:true, why:'CDC (Debezium → Kafka) is one of the most common uses. Ordered per key, multiple sinks.'},
+    {s:'Signup form checks "is this username taken?" before submitting.', k:false, why:'The caller needs an answer now. Doing this over topics means reply topics and correlation IDs for worse latency.', alt:'HTTP or gRPC'},
+    {s:'Cancel an order automatically if it\'s still unpaid after 15 minutes.', k:false, why:'Kafka has no delayed delivery; records are readable immediately.', alt:'SQS delay queue, Temporal, or a DB table of due times'},
+    {s:'Deliver chat messages to millions of phones, one topic per user.', k:false, why:'Millions of topics don\'t scale, and phones aren\'t Kafka consumers.', alt:'WebSocket gateway, MQTT, NATS, Redis pub/sub'},
+    {s:'Ship logs from 2,000 servers to Elasticsearch, alerting, and S3 archive.', k:true, why:'High-volume events with several sinks and replay value.'},
+    {s:'Push 2 GB video uploads through the processing pipeline.', k:false, why:'Default max record is ~1 MB; large records hurt brokers.', alt:'Store in S3, send a pointer event (claim-check)'},
+    {s:'Three services, a few hundred events per minute.', k:false, why:'The operational cost of running Kafka outweighs the benefit at this size.', alt:'Postgres outbox, LISTEN/NOTIFY, SQS, Redis Streams'},
+    {s:'Fleet GPS pings feed surge pricing, ETA and the data lake.', k:true, why:'Continuous telemetry, keyed by device, consumed by several groups.'},
+    {s:'OrderPlaced triggers inventory, payment, notifications and analytics.', k:true, why:'Event-driven fan-out. The order service doesn\'t need to know who listens.'},
+    {s:'Every event across the whole system must be processed in one global order.', k:false, why:'Global order forces one partition: one consumer, no scaling. You usually only need per-key order.', alt:'Rethink to per-key ordering; or a DB sequence / consensus log'}
+  ];
+  const answers = {}; let onlyOpen = false;
+  function renderQuiz(){
+    let right = 0, done = 0;
+    $('cards').innerHTML = Q.map((q,i) => {
+      const a = answers[i];
+      if (a !== undefined){ done++; if (a === q.k) right++; }
+      if (onlyOpen && a !== undefined) return '';
+      const st = a === undefined ? '' : (a === q.k ? ' right' : ' wrong');
+      const ans = a === undefined ? `<div class="acts"><button data-i="${i}" data-a="1">Kafka</button><button data-i="${i}" data-a="0">Not Kafka</button></div>` :
+        `<div class="ans"><span class="state ${a===q.k?'good':'bad'}">${a===q.k?'correct':'not quite'}</span> <strong>${q.k?'Kafka fits.':'Not Kafka.'}</strong> ${q.why}${q.alt?`<div class="mono" style="margin-top:6px">Use: ${q.alt}</div>`:''}</div>`;
+      return `<div class="card${st}"><div class="sc">${q.s}</div>${ans}</div>`;
+    }).join('') || '<p class="out">All answered. Reset to go again.</p>';
+    $('score').textContent = `${right} correct · ${done} / ${Q.length} answered`;
+    $('cards').querySelectorAll('button[data-i]').forEach(b => b.onclick = () => { answers[+b.dataset.i] = b.dataset.a === '1'; renderQuiz(); });
+  }
+  $('qfilter').onclick = () => { onlyOpen = !onlyOpen; $('qfilter').textContent = onlyOpen ? 'Show all' : 'Show unanswered only'; $('qfilter').classList.toggle('sel', onlyOpen); renderQuiz(); };
+  $('qreset').onclick = () => { for (const k in answers) delete answers[k]; renderQuiz(); };
+
+  /* ---------- rail highlight ---------- */
+  const links = [...document.querySelectorAll('nav.rail a')];
+  const secs = links.map(a => document.querySelector(a.getAttribute('href')));
+  function spy(){
+    let cur = 0; secs.forEach((s,i) => { if (s.getBoundingClientRect().top < 140) cur = i; });
+    links.forEach((a,i) => a.classList.toggle('on', i===cur));
+  }
+  addEventListener('scroll', spy, {passive:true});
+
+  seedParts(); renderBrokers(); renderGroups(); renderDelivery(); renderQuiz(); spy();
+})();
+</script>
+
+</body></html>
